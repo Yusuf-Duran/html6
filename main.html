@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drawing Board</title>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Drawing Board</title>
+        <style>
         * {
             box-sizing: border-box;
             margin: 0;
@@ -32,12 +32,101 @@
             font-size: 1.5rem;
         }
 
+        .container {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            width: 100%;
+        }
+
         .tools {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
+            margin-right: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+
+        .tool-group {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tool-group label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .tool-group input[type="color"],
+        .tool-group input[type="number"],
+        .tool-group select,
+        .tool-group button {
+            padding: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .tool-group button img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .draw-modes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .draw-modes button {
+            width: 40px;
+            height: 40px;
+            padding: 5px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+        }
+
+        .draw-modes button.active {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .draw-modes button:hover {
+            background-color: #555;
+        }
+
+        .canvas-container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
 
         button,
@@ -72,7 +161,7 @@
             height: auto;
         }
 
-        .drawing-board {
+        #drawing-board {
             background-color: white;
         }
 
@@ -108,55 +197,120 @@
                 align-items: center;
             }
         }
+
+        .layer-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .layer-controls label {
+            font-size: 0.9rem;
+            margin-right: 5px;
+        }
+
+        .layer-controls button,
+        .layer-controls select {
+            padding: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .layer-controls button img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .tool-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-row input[type="color"],
+        .tool-row input[type="number"],
+        .tool-row button {
+            padding: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
-</head>
+    </head>
 
-<body>
-    <header>
-        <h1>Drawing Board</h1>
-    </header>
+    <body>
+        <div class="container">
+            <div class="tools">
+                <div class="tool-group">
+                    <label for="color">Color:</label>
+                    <input type="color" id="color" value="#000000">
+                </div>
 
-    <div class="tools">
-        <label for="color">Color:</label>
-        <input type="color" id="color" value="#000000">
+                <div class="tool-group">
+                    <label for="size">Size:</label>
+                    <input type="number" id="size-input" min="1" value="5">
+                </div>
 
-        <label for="size">Size:</label>
-        <select id="size">
-            <option value="2">2</option>
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-        </select>
+                <div class="tool-group">
+                    <button id="clear">Clear</button>
+                </div>
 
-        <button id="clear">Clear</button>
-        <input type="text" id="save-name" placeholder="Enter name">
-        <button id="save">Save</button>
-        <button data-tool="rectangle">Rectangle</button>
-        <button data-tool="circle">Circle</button>
-        <button data-tool="eraser">Eraser</button>
-        <button data-tool="pencil" class="active">Pencil</button>
+                <div class="tool-group draw-modes">
+                    <button data-tool="rectangle"><img
+                            src="assets/rectangle.svg"
+                            alt="Rectangle" /></button>
+                    <button data-tool="circle"><img src="assets/circle.svg"
+                            alt="Circle" /></button>
+                    <button data-tool="eraser"><img src="assets/eraser.svg"
+                            alt="Eraser" /></button>
+                    <button data-tool="pencil" class="active"><img
+                            src="assets/pencil.svg" alt="Pencil" /></button>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <div class="canvas-wrapper">
+                    <canvas id="drawing-board" width="800"
+                        height="600"></canvas>
+                    <div class="gallery" id="gallery"></div>
+                </div>
+                <div class="controls">
+                    <div class="tool-group">
+                        <input type="text" id="save-name"
+                            placeholder="Enter name">
+                        <button id="save"><img src="assets/save.svg"
+                                alt="Save" /></button>
+                    </div>
+                    <div class="tool-group layer-controls">
+                        <label>Layers:</label>
+                        <button id="add-layer"><img src="assets/add.svg"
+                                alt="Add Layer" /></button>
+                        <button id="delete-layer" disabled><img
+                                src="assets/remove.svg"
+                                alt="Delete Layer" /></button>
+                        <select id="layer-select" class="layer-select"></select>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <button id="add-layer">Add Layer</button>
-        <button id="delete-layer">Delete Layer</button>
-    </div>
-
-    <canvas id="drawing-board" width="800" height="600"></canvas>
-
-    <div class="gallery" id="gallery"></div>
-
-    <script>
+        <script>
         const canvas = document.getElementById('drawing-board');
         let ctx = canvas.getContext('2d');
         const colorPicker = document.getElementById('color');
-        const sizeSelector = document.getElementById('size');
+        const sizeInput = document.getElementById('size-input');
         const clearButton = document.getElementById('clear');
         const saveButton = document.getElementById('save');
         const loadButton = document.getElementById('load');
         const saveNameInput = document.getElementById('save-name');
         const gallery = document.getElementById('gallery');
-        const toolButtons = document.querySelectorAll('button[data-tool]');
+        const toolButtons = document.querySelectorAll('.draw-modes button');
         const addLayerBtn = document.getElementById("add-layer");
         const deleteLayerBtn = document.getElementById("delete-layer");
+        const layerSelect = document.getElementById("layer-select");
 
         const drawLayers = () => {
             const mainCtx = canvas.getContext('2d');
@@ -165,6 +319,18 @@
                 mainCtx.drawImage(layer, 0, 0);
             });
         }
+
+        const updateLayerControls = () => {
+            layerSelect.innerHTML = '';
+            layers.forEach((_, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `Layer ${index + 1}`;
+                layerSelect.appendChild(option);
+            });
+            layerSelect.value = currentLayer;
+            deleteLayerBtn.disabled = layers.length <= 1;
+        };
 
         const addLayer = () => {
             const newLayer = document.createElement('canvas');
@@ -175,6 +341,7 @@
             currentLayer = layers.length - 1;
             ctx = layers[currentLayer].getContext('2d');
             drawLayers();
+            updateLayerControls();
         }
 
         const deleteLayer = () => {
@@ -183,6 +350,7 @@
                 currentLayer = layers.length - 1;
                 ctx = layers[currentLayer].getContext('2d');
                 drawLayers();
+                updateLayerControls();
             } else {
                 alert('Cannot delete the last layer');
             }
@@ -310,7 +478,7 @@
         const state = {
             tool: 'pencil',
             color: colorPicker.value,
-            size: parseInt(sizeSelector.value),
+            size: parseInt(sizeInput.value),
             drawing: false,
             startX: 0,
             startY: 0
@@ -391,7 +559,10 @@
 
         clearButton.addEventListener('click', () => {
             console.log('Canvas cleared');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            layers.forEach(layer => {
+                layer.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            });
+            drawLayers();
         });
 
         const updateGallery = () => {
@@ -461,18 +632,27 @@
             state.color = e.target.value;
         });
 
-        sizeSelector.addEventListener('input', (e) => {
-            console.log(`Size changed to: ${e.target.value}`);
-            state.size = parseInt(e.target.value);
+        sizeInput.addEventListener('input', (e) => {
+            const value = parseInt(e.target.value);
+            if (!isNaN(value) && value > 0) {
+                state.size = value;
+                sizeSelect.value = value;
+            }
         });
-
+        
         addLayerBtn.addEventListener('click', addLayer);
         deleteLayerBtn.addEventListener('click', deleteLayer);
 
+        layerSelect.addEventListener('change', (e) => {
+            currentLayer = parseInt(e.target.value);
+            ctx = layers[currentLayer].getContext('2d');
+            drawLayers();
+        });
 
+        updateLayerControls();
         updateGallery();
     </script>
 
-</body>
+    </body>
 
 </html>
