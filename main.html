@@ -1,658 +1,818 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drawing Board</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Drawing Board</title>
-        <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
 
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
+      header {
+        width: 100%;
+        padding: 10px;
+        background-color: #333;
+        color: white;
+        text-align: center;
+        font-size: 1.5rem;
+      }
 
-        header {
-            width: 100%;
-            padding: 10px;
-            background-color: #333;
-            color: white;
-            text-align: center;
-            font-size: 1.5rem;
-        }
+      .container {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+      }
 
-        .container {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            width: 100%;
-        }
+      .tools {
+        display: none;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        max-width: 300px;
+        position: absolute;
+        top: 50px;
+        left: 10px;
+        z-index: 10;
+      }
 
+      .tools.visible {
+        display: flex;
+      }
+
+      .toggle-tools {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background-color: #333;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        z-index: 11;
+      }
+
+      .tool-group {
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .tool-group label {
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+      }
+
+      .tool-group input[type="color"],
+      .tool-group input[type="number"],
+      .tool-group select,
+      .tool-group button {
+        padding: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      .tool-group button img {
+        width: 20px;
+        height: 20px;
+      }
+
+      .draw-modes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      .draw-modes button {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #333;
+        color: white;
+      }
+
+      .draw-modes button.active {
+        background-color: #007bff;
+        color: white;
+      }
+
+      .draw-modes button:hover {
+        background-color: #555;
+      }
+
+      .canvas-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        height: 100%;
+      }
+
+      .canvas-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-left: 20px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      .right-controls {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        z-index: 10;
+        width: 250px;
+      }
+
+      .right-controls.visible {
+        display: flex;
+      }
+
+      .toggle-right-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        z-index: 11;
+      }
+
+      button,
+      select,
+      input[type="color"],
+      input[type="text"] {
+        padding: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        background-color: #333;
+        color: white;
+      }
+
+      button.active {
+        background-color: #007bff;
+        color: white;
+      }
+
+      button:hover {
+        background-color: #555;
+      }
+
+      canvas {
+        border: 2px solid #333;
+        margin-bottom: 20px;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+      }
+
+      #drawing-board {
+        background-color: white;
+      }
+
+      .layer {
+        background-color: transparent;
+      }
+
+      .gallery {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0;
+        justify-content: center;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+
+      .gallery-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 calc(33.333% - 20px);
+        max-width: calc(33.333% - 20px);
+        box-sizing: border-box;
+      }
+
+      .gallery-item img {
+        border: 2px solid #333;
+        max-width: 100%;
+        height: auto;
+        cursor: pointer;
+      }
+
+      @media (max-width: 768px) {
         .tools {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-right: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            max-width: 300px;
+          flex-direction: column;
+          align-items: center;
         }
+      }
 
-        .tool-group {
-            display: flex;
-            flex-direction: row;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+      .layer-controls {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 10px;
+      }
 
-        .tool-group label {
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
+      .layer-controls label {
+        font-size: 0.9rem;
+        margin-right: 5px;
+      }
 
-        .tool-group input[type="color"],
-        .tool-group input[type="number"],
-        .tool-group select,
-        .tool-group button {
-            padding: 5px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
+      .layer-controls button,
+      .layer-controls select {
+        padding: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-        .tool-group button img {
-            width: 20px;
-            height: 20px;
-        }
+      .layer-controls button img {
+        width: 20px;
+        height: 20px;
+      }
 
-        .draw-modes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
+      .tool-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        .draw-modes button {
-            width: 40px;
-            height: 40px;
-            padding: 5px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background-color: #333;
-            color: white;
-        }
+      .tool-row input[type="color"],
+      .tool-row input[type="number"],
+      .tool-row button {
+        padding: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
 
-        .draw-modes button.active {
-            background-color: #007BFF;
-            color: white;
-        }
+      .notifications {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 100;
+      }
 
-        .draw-modes button:hover {
-            background-color: #555;
-        }
+      .notification {
+        background-color: #333;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
 
-        .canvas-container {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-        }
-
-        .canvas-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-left: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        button,
-        select,
-        input[type="color"],
-        input[type="text"] {
-            padding: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        button {
-            background-color: #333;
-            color: white;
-        }
-
-        button.active {
-            background-color: #007BFF;
-            color: white;
-        }
-
-        button:hover {
-            background-color: #555;
-        }
-
-        canvas {
-            border: 2px solid #333;
-            margin-bottom: 20px;
-            max-width: 100%;
-            height: auto;
-        }
-
-        #drawing-board {
-            background-color: white;
-        }
-
-        .layer {
-            background-color: transparent;
-        }
-
-        .gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
-            justify-content: center;
-        }
-
-        .gallery-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .gallery-item img {
-            border: 2px solid #333;
-            max-width: 100px;
-            height: auto;
-            cursor: pointer;
-        }
-
-        @media (max-width: 768px) {
-            .tools {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-
-        .layer-controls {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .layer-controls label {
-            font-size: 0.9rem;
-            margin-right: 5px;
-        }
-
-        .layer-controls button,
-        .layer-controls select {
-            padding: 5px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        .layer-controls button img {
-            width: 20px;
-            height: 20px;
-        }
-
-        .tool-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .tool-row input[type="color"],
-        .tool-row input[type="number"],
-        .tool-row button {
-            padding: 5px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
+      .notification.show {
+        opacity: 1;
+      }
     </style>
-    </head>
+  </head>
 
-    <body>
-        <div class="container">
-            <div class="tools">
-                <div class="tool-group">
-                    <label for="color">Color:</label>
-                    <input type="color" id="color" value="#000000">
-                </div>
-
-                <div class="tool-group">
-                    <label for="size">Size:</label>
-                    <input type="number" id="size-input" min="1" value="5">
-                </div>
-
-                <div class="tool-group">
-                    <button id="clear">Clear</button>
-                </div>
-
-                <div class="tool-group draw-modes">
-                    <button data-tool="rectangle"><img
-                            src="assets/rectangle.svg"
-                            alt="Rectangle" /></button>
-                    <button data-tool="circle"><img src="assets/circle.svg"
-                            alt="Circle" /></button>
-                    <button data-tool="eraser"><img src="assets/eraser.svg"
-                            alt="Eraser" /></button>
-                    <button data-tool="pencil" class="active"><img
-                            src="assets/pencil.svg" alt="Pencil" /></button>
-                </div>
-            </div>
-            <div class="canvas-container">
-                <div class="canvas-wrapper">
-                    <canvas id="drawing-board" width="800"
-                        height="600"></canvas>
-                    <div class="gallery" id="gallery"></div>
-                </div>
-                <div class="controls">
-                    <div class="tool-group">
-                        <input type="text" id="save-name"
-                            placeholder="Enter name">
-                        <button id="save"><img src="assets/save.svg"
-                                alt="Save" /></button>
-                    </div>
-                    <div class="tool-group layer-controls">
-                        <label>Layers:</label>
-                        <button id="add-layer"><img src="assets/add.svg"
-                                alt="Add Layer" /></button>
-                        <button id="delete-layer" disabled><img
-                                src="assets/remove.svg"
-                                alt="Delete Layer" /></button>
-                        <select id="layer-select" class="layer-select"></select>
-                    </div>
-                </div>
-            </div>
+  <body>
+    <div class="container">
+      <button class="toggle-tools">
+        <img src="assets/arrow_right.svg" alt="Open image tools tab" />
+      </button>
+      <div class="tools">
+        <div class="tool-group layer-controls">
+          <label>Layers:</label>
+          <button id="add-layer">
+            <img src="assets/add.svg" alt="Add Layer" />
+          </button>
+          <button id="delete-layer" disabled>
+            <img src="assets/remove.svg" alt="Delete Layer" />
+          </button>
+          <select id="layer-select" class="layer-select"></select>
+        </div>
+        <div class="tool-group">
+          <label for="color">Color:</label>
+          <input type="color" id="color" value="#000000" />
         </div>
 
-        <script>
-        const canvas = document.getElementById('drawing-board');
-        let ctx = canvas.getContext('2d');
-        const colorPicker = document.getElementById('color');
-        const sizeInput = document.getElementById('size-input');
-        const clearButton = document.getElementById('clear');
-        const saveButton = document.getElementById('save');
-        const loadButton = document.getElementById('load');
-        const saveNameInput = document.getElementById('save-name');
-        const gallery = document.getElementById('gallery');
-        const toolButtons = document.querySelectorAll('.draw-modes button');
-        const addLayerBtn = document.getElementById("add-layer");
-        const deleteLayerBtn = document.getElementById("delete-layer");
-        const layerSelect = document.getElementById("layer-select");
+        <div class="tool-group">
+          <label for="size">Size:</label>
+          <input type="number" id="size-input" min="1" value="5" />
+        </div>
 
-        const drawLayers = () => {
-            const mainCtx = canvas.getContext('2d');
-            mainCtx.clearRect(0, 0, canvas.width, canvas.height);
-            layers.forEach(layer => {
-                mainCtx.drawImage(layer, 0, 0);
-            });
-        }
+        <div class="tool-group">
+          <button id="clear">Clear</button>
+        </div>
 
-        const updateLayerControls = () => {
-            layerSelect.innerHTML = '';
-            layers.forEach((_, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `Layer ${index + 1}`;
-                layerSelect.appendChild(option);
-            });
-            layerSelect.value = currentLayer;
-            deleteLayerBtn.disabled = layers.length <= 1;
-        };
+        <div class="tool-group draw-modes">
+          <button data-tool="rectangle">
+            <img src="assets/rectangle.svg" alt="Rectangle" />
+          </button>
+          <button data-tool="circle">
+            <img src="assets/circle.svg" alt="Circle" />
+          </button>
+          <button data-tool="eraser">
+            <img src="assets/eraser.svg" alt="Eraser" />
+          </button>
+          <button data-tool="pencil" class="active">
+            <img src="assets/pencil.svg" alt="Pencil" />
+          </button>
+        </div>
+      </div>
+      <div class="canvas-container">
+        <div class="canvas-wrapper">
+          <canvas
+            id="drawing-board"
+            width="window.innerWidth"
+            height="window.innerHeight"
+          ></canvas>
+        </div>
+        <button class="toggle-right-controls">
+          <img src="assets/arrow_left.svg" alt="Open image save tab" />
+        </button>
+        <div class="right-controls">
+          <div class="tool-group">
+            <input type="text" id="save-name" placeholder="Enter name" />
+            <button id="save"><img src="assets/save.svg" alt="Save" /></button>
+          </div>
+          <div class="gallery" id="gallery"></div>
+        </div>
+      </div>
+    </div>
 
-        const addLayer = () => {
-            const newLayer = document.createElement('canvas');
-            newLayer.width = canvas.width;
-            newLayer.height = canvas.height;
-            newLayer.classList.add('layer');
-            layers.push(newLayer);
-            currentLayer = layers.length - 1;
-            ctx = layers[currentLayer].getContext('2d');
-            drawLayers();
-            updateLayerControls();
-        }
+    <div class="notifications" id="notifications"></div>
 
-        const deleteLayer = () => {
-            if (layers.length > 1) {
-                layers.pop();
-                currentLayer = layers.length - 1;
-                ctx = layers[currentLayer].getContext('2d');
-                drawLayers();
-                updateLayerControls();
-            } else {
-                alert('Cannot delete the last layer');
-            }
-        }
+    <script>
+      const canvas = document.getElementById("drawing-board");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      let ctx = canvas.getContext("2d");
+      const colorPicker = document.getElementById("color");
+      const sizeInput = document.getElementById("size-input");
+      const clearButton = document.getElementById("clear");
+      const saveButton = document.getElementById("save");
+      const loadButton = document.getElementById("load");
+      const saveNameInput = document.getElementById("save-name");
+      const gallery = document.getElementById("gallery");
+      const toolButtons = document.querySelectorAll(".draw-modes button");
+      const addLayerBtn = document.getElementById("add-layer");
+      const deleteLayerBtn = document.getElementById("delete-layer");
+      const layerSelect = document.getElementById("layer-select");
+      const notifications = document.getElementById("notifications");
 
-        let previousDrawing = null;
-        let layers = [];
-        let currentLayer = 0;
-        addLayer();
+      const showNotification = (message) => {
+        const notification = document.createElement("div");
+        notification.className = "notification";
+        notification.textContent = message;
+        notifications.appendChild(notification);
+        setTimeout(() => {
+          notification.classList.add("show");
+        }, 10);
+        setTimeout(() => {
+          notification.classList.remove("show");
+          setTimeout(() => {
+            notifications.removeChild(notification);
+          }, 500);
+        }, 2000);
+      };
 
-
-        const tools = {
-            pencil: {
-                start: () => {
-                    console.log('Pencil started');
-                },
-                move: (e) => {
-                    if (!state.drawing) return;
-                    const { x, y } = getPosition(e);
-                    console.log(`Drawing pencil to (${x}, ${y})`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = state.color;
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                },
-                end: () => {
-                    console.log('Pencil ended');
-                    ctx.beginPath();
-                }
-            },
-            rectangle: {
-                start: (e) => {
-                    const { x, y } = getPosition(e);
-                    state.startX = x;
-                    state.startY = y;
-                    console.log(`Rectangle start at (${x}, ${y})`);
-                    previousDrawing = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                },
-                move: (e) => {
-                    if (previousDrawing) {
-                        ctx.putImageData(previousDrawing, 0, 0);
-                    }
-                    const { x, y } = getPosition(e);
-                    const width = x - state.startX;
-                    const height = y - state.startY;
-                    console.log(`Rectangle preview from (${state.startX}, ${state.startY}) to (${x}, ${y})`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = state.color;
-                    ctx.strokeRect(state.startX, state.startY, width, height);
-                },
-                end: (e) => {
-                    if (previousDrawing) {
-                        ctx.putImageData(previousDrawing, 0, 0);
-                    }
-                    previousDrawing = null;
-                    const { x, y } = getPosition(e);
-                    const width = x - state.startX;
-                    const height = y - state.startY;
-                    console.log(`Rectangle drawn from (${state.startX}, ${state.startY}) to (${x}, ${y})`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = state.color;
-                    ctx.strokeRect(state.startX, state.startY, width, height);
-                }
-            },
-            circle: {
-                start: (e) => {
-                    const { x, y } = getPosition(e);
-                    state.startX = x;
-                    state.startY = y;
-                    console.log(`Circle start at (${x}, ${y})`);
-                    previousDrawing = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                },
-                move: (e) => {
-                    if (previousDrawing) {
-                        ctx.putImageData(previousDrawing, 0, 0);
-                    }
-                    const { x, y } = getPosition(e);
-                    const radius = Math.sqrt(Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2));
-                    console.log(`Circle preview with radius: ${radius}`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = state.color;
-                    ctx.beginPath();
-                    ctx.arc(state.startX, state.startY, radius, 0, Math.PI * 2);
-                    ctx.stroke();
-                },
-                end: (e) => {
-                    if (previousDrawing) {
-                        ctx.putImageData(previousDrawing, 0, 0);
-                    }
-                    previousDrawing = null;
-                    const { x, y } = getPosition(e);  // Ensure this is using the last known valid position
-                    const radius = Math.sqrt(Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2));
-                    console.log(`Circle drawn with radius: ${radius}`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = state.color;
-                    ctx.beginPath();
-                    ctx.arc(state.startX, state.startY, radius, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            },
-            eraser: {
-                start: () => {
-                    console.log('Eraser started');
-                },
-                move: (e) => {
-                    if (!state.drawing) return;
-                    const { x, y } = getPosition(e);
-                    console.log(`Erasing at (${x}, ${y})`);
-                    ctx.lineWidth = state.size;
-                    ctx.strokeStyle = '#ffffff';
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                },
-                end: () => {
-                    console.log('Eraser ended');
-                    ctx.beginPath();
-                }
-            }
-        };
-
-        const state = {
-            tool: 'pencil',
-            color: colorPicker.value,
-            size: parseInt(sizeInput.value),
-            drawing: false,
-            startX: 0,
-            startY: 0
-        };
-
-        const getPosition = (e) => {
-            console.log(e);
-            const rect = canvas.getBoundingClientRect();
-            let x, y;
-
-            if (e.touches && e.touches.length > 0) {
-                // Handle touch events
-                x = e.touches[0].clientX;
-                y = e.touches[0].clientY;
-            } else if (e.clientX && e.clientY) {
-                // Handle mouse events
-                x = e.clientX;
-                y = e.clientY;
-            } else if (e.changedTouches && e.changedTouches.length > 0) {
-                x = e.changedTouches[0].clientX;
-                y = e.changedTouches[0].clientY;
-            } else {
-                return { x: 0, y: 0 }; // Return 0,0 if no valid position found
-            }
-
-            return { x: x - rect.left, y: y - rect.top };
-        };
-
-
-        const setTool = (tool) => {
-            console.log(`Tool set to: ${tool}`);
-            state.tool = tool;
-            toolButtons.forEach(button => button.classList.remove('active'));
-            document.querySelector(`button[data-tool="${tool}"]`).classList.add('active');
-        };
-
-        const startDrawing = (e) => {
-            console.log('Drawing started');
-            state.drawing = true;
-            tools[state.tool].start(e);
-        };
-
-        const draw = (e) => {
-            if (state.drawing) {
-                console.log('Drawing...');
-                tools[state.tool].move(e);
-                drawLayers();
-            }
-        };
-
-        const stopDrawing = (e) => {
-            if (!state.drawing) return;
-            console.log('Drawing stopped');
-            tools[state.tool].end(e);
-            state.drawing = false;
-            drawLayers();
-        };
-
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseleave', stopDrawing);
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            startDrawing(e);
+      const drawLayers = () => {
+        const mainCtx = canvas.getContext("2d");
+        mainCtx.clearRect(0, 0, canvas.width, canvas.height);
+        layers.forEach((layer) => {
+          mainCtx.drawImage(layer, 0, 0);
         });
+      };
 
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            draw(e);
+      const updateLayerControls = () => {
+        layerSelect.innerHTML = "";
+        layers.forEach((_, index) => {
+          const option = document.createElement("option");
+          option.value = index;
+          option.textContent = `Layer ${index + 1}`;
+          layerSelect.appendChild(option);
         });
+        layerSelect.value = currentLayer;
+        deleteLayerBtn.disabled = layers.length <= 1;
+      };
 
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            stopDrawing(e);
-        });
-
-        clearButton.addEventListener('click', () => {
-            console.log('Canvas cleared');
-            layers.forEach(layer => {
-                layer.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            });
-            drawLayers();
-        });
-
-        const updateGallery = () => {
-            console.log('Updating gallery...');
-            gallery.innerHTML = '';
-            const drawings = JSON.parse(localStorage.getItem('drawings') || '[]');
-            drawings.forEach((drawing, index) => {
-                const item = document.createElement('div');
-                item.className = 'gallery-item';
-
-                const img = document.createElement('img');
-                img.src = drawing.data;
-                img.alt = drawing.name;
-                img.addEventListener('click', () => {
-                    console.log('Loading image from gallery');
-                    const imgToLoad = new Image();
-                    imgToLoad.src = drawing.data;
-                    imgToLoad.onload = () => {
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        ctx.drawImage(imgToLoad, 0, 0);
-                    };
-                });
-
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', () => {
-                    console.log('Deleting drawing from gallery');
-                    drawings.splice(index, 1);
-                    localStorage.setItem('drawings', JSON.stringify(drawings));
-                    updateGallery();
-                });
-                item.addEventListener('mouseenter', () => item.appendChild(deleteButton));
-                item.addEventListener('mouseleave', () => item.removeChild(deleteButton));
-                item.style.position = 'relative';
-                const label = document.createElement('span');
-                label.textContent = drawing.name;
-
-                item.appendChild(img);
-                item.appendChild(label);
-                gallery.appendChild(item);
-            });
-        };
-
-        saveButton.addEventListener('click', () => {
-            const name = saveNameInput.value.trim();
-            if (!name) {
-                alert('Please enter a name for your drawing!');
-                return;
-            }
-
-            const dataURL = canvas.toDataURL();
-            const drawings = JSON.parse(localStorage.getItem('drawings') || '[]');
-            drawings.push({ name, data: dataURL });
-            localStorage.setItem('drawings', JSON.stringify(drawings));
-            updateGallery();
-            alert('Drawing saved!');
-        });
-
-        toolButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                setTool(button.getAttribute('data-tool'));
-            });
-        });
-
-        colorPicker.addEventListener('input', (e) => {
-            console.log(`Color changed to: ${e.target.value}`);
-            state.color = e.target.value;
-        });
-
-        sizeInput.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            if (!isNaN(value) && value > 0) {
-                state.size = value;
-                sizeSelect.value = value;
-            }
-        });
-        
-        addLayerBtn.addEventListener('click', addLayer);
-        deleteLayerBtn.addEventListener('click', deleteLayer);
-
-        layerSelect.addEventListener('change', (e) => {
-            currentLayer = parseInt(e.target.value);
-            ctx = layers[currentLayer].getContext('2d');
-            drawLayers();
-        });
-
+      const addLayer = () => {
+        const newLayer = document.createElement("canvas");
+        newLayer.width = canvas.width;
+        newLayer.height = canvas.height;
+        newLayer.classList.add("layer");
+        layers.push(newLayer);
+        currentLayer = layers.length - 1;
+        ctx = layers[currentLayer].getContext("2d");
+        drawLayers();
         updateLayerControls();
+      };
+
+      const deleteLayer = () => {
+        if (layers.length > 1) {
+          layers.pop();
+          currentLayer = layers.length - 1;
+          ctx = layers[currentLayer].getContext("2d");
+          drawLayers();
+          updateLayerControls();
+        } else {
+          showNotification("Cannot delete the last layer");
+        }
+      };
+
+      let previousDrawing = null;
+      let layers = [];
+      let currentLayer = 0;
+      addLayer();
+
+      const tools = {
+        pencil: {
+          start: () => {
+            console.log("Pencil started");
+          },
+          move: (e) => {
+            if (!state.drawing) return;
+            const { x, y } = getPosition(e);
+            console.log(`Drawing pencil to (${x}, ${y})`);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+          },
+          end: () => {
+            console.log("Pencil ended");
+            ctx.beginPath();
+          },
+        },
+        rectangle: {
+          start: (e) => {
+            const { x, y } = getPosition(e);
+            state.startX = x;
+            state.startY = y;
+            console.log(`Rectangle start at (${x}, ${y})`);
+            previousDrawing = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          },
+          move: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            const { x, y } = getPosition(e);
+            const width = x - state.startX;
+            const height = y - state.startY;
+            console.log(
+              `Rectangle preview from (${state.startX}, ${state.startY}) to (${x}, ${y})`
+            );
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.strokeRect(state.startX, state.startY, width, height);
+          },
+          end: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            previousDrawing = null;
+            const { x, y } = getPosition(e);
+            const width = x - state.startX;
+            const height = y - state.startY;
+            console.log(
+              `Rectangle drawn from (${state.startX}, ${state.startY}) to (${x}, ${y})`
+            );
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.strokeRect(state.startX, state.startY, width, height);
+          },
+        },
+        circle: {
+          start: (e) => {
+            const { x, y } = getPosition(e);
+            state.startX = x;
+            state.startY = y;
+            console.log(`Circle start at (${x}, ${y})`);
+            previousDrawing = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          },
+          move: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            const { x, y } = getPosition(e);
+            const radius = Math.sqrt(
+              Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2)
+            );
+            console.log(`Circle preview with radius: ${radius}`);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.arc(state.startX, state.startY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          },
+          end: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            previousDrawing = null;
+            const { x, y } = getPosition(e); // Ensure this is using the last known valid position
+            const radius = Math.sqrt(
+              Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2)
+            );
+            console.log(`Circle drawn with radius: ${radius}`);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.arc(state.startX, state.startY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          },
+        },
+        eraser: {
+          start: () => {
+            console.log("Eraser started");
+          },
+          move: (e) => {
+            if (!state.drawing) return;
+            const { x, y } = getPosition(e);
+            console.log(`Erasing at (${x}, ${y})`);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+          },
+          end: () => {
+            console.log("Eraser ended");
+            ctx.beginPath();
+          },
+        },
+      };
+
+      const state = {
+        tool: "pencil",
+        color: colorPicker.value,
+        size: parseInt(sizeInput.value),
+        drawing: false,
+        startX: 0,
+        startY: 0,
+      };
+
+      const getPosition = (e) => {
+        console.log(e);
+        const rect = canvas.getBoundingClientRect();
+        let x, y;
+
+        if (e.touches && e.touches.length > 0) {
+          // Handle touch events
+          x = e.touches[0].clientX;
+          y = e.touches[0].clientY;
+        } else if (e.clientX && e.clientY) {
+          // Handle mouse events
+          x = e.clientX;
+          y = e.clientY;
+        } else if (e.changedTouches && e.changedTouches.length > 0) {
+          x = e.changedTouches[0].clientX;
+          y = e.changedTouches[0].clientY;
+        } else {
+          return { x: 0, y: 0 }; // Return 0,0 if no valid position found
+        }
+
+        return { x: x - rect.left, y: y - rect.top };
+      };
+
+      const setTool = (tool) => {
+        console.log(`Tool set to: ${tool}`);
+        state.tool = tool;
+        toolButtons.forEach((button) => button.classList.remove("active"));
+        document
+          .querySelector(`button[data-tool="${tool}"]`)
+          .classList.add("active");
+      };
+
+      const startDrawing = (e) => {
+        console.log("Drawing started");
+        state.drawing = true;
+        tools[state.tool].start(e);
+      };
+
+      const draw = (e) => {
+        if (state.drawing) {
+          console.log("Drawing...");
+          tools[state.tool].move(e);
+          drawLayers();
+        }
+      };
+
+      const stopDrawing = (e) => {
+        if (!state.drawing) return;
+        console.log("Drawing stopped");
+        tools[state.tool].end(e);
+        state.drawing = false;
+        drawLayers();
+      };
+
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseleave", stopDrawing);
+
+      canvas.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        startDrawing(e);
+      });
+
+      canvas.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+        draw(e);
+      });
+
+      canvas.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        stopDrawing(e);
+      });
+
+      clearButton.addEventListener("click", () => {
+        console.log("Canvas cleared");
+        layers.forEach((layer) => {
+          layer.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        });
+        drawLayers();
+      });
+
+      const updateGallery = () => {
+        console.log("Updating gallery...");
+        gallery.innerHTML = "";
+        const drawings = JSON.parse(localStorage.getItem("drawings") || "[]");
+        drawings.forEach((drawing, index) => {
+          const item = document.createElement("div");
+          item.className = "gallery-item";
+
+          const img = document.createElement("img");
+          img.src = drawing.data;
+          img.alt = drawing.name;
+          img.addEventListener("click", () => {
+            console.log("Loading image from gallery");
+            const imgToLoad = new Image();
+            imgToLoad.src = drawing.data;
+            imgToLoad.onload = () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(imgToLoad, 0, 0);
+            };
+          });
+
+          const deleteButton = document.createElement("button");
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", () => {
+            console.log("Deleting drawing from gallery");
+            drawings.splice(index, 1);
+            localStorage.setItem("drawings", JSON.stringify(drawings));
+            updateGallery();
+          });
+          item.addEventListener("mouseenter", () =>
+            item.appendChild(deleteButton)
+          );
+          item.addEventListener("mouseleave", () =>
+            item.removeChild(deleteButton)
+          );
+          item.style.position = "relative";
+          const label = document.createElement("span");
+          label.textContent = drawing.name;
+
+          item.appendChild(img);
+          item.appendChild(label);
+          gallery.appendChild(item);
+        });
+      };
+
+      saveButton.addEventListener("click", () => {
+        const name = saveNameInput.value.trim();
+        if (!name) {
+          showNotification("Please enter a name for your drawing!");
+          return;
+        }
+
+        const dataURL = canvas.toDataURL();
+        const drawings = JSON.parse(localStorage.getItem("drawings") || "[]");
+        drawings.push({ name, data: dataURL });
+        localStorage.setItem("drawings", JSON.stringify(drawings));
         updateGallery();
+        showNotification("Drawing saved!");
+      });
+
+      toolButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          setTool(button.getAttribute("data-tool"));
+        });
+      });
+
+      colorPicker.addEventListener("input", (e) => {
+        console.log(`Color changed to: ${e.target.value}`);
+        state.color = e.target.value;
+      });
+
+      sizeInput.addEventListener("input", (e) => {
+        const value = parseInt(e.target.value);
+        if (!isNaN(value) && value > 0) {
+          state.size = value;
+          sizeSelect.value = value;
+        }
+      });
+
+      addLayerBtn.addEventListener("click", addLayer);
+      deleteLayerBtn.addEventListener("click", deleteLayer);
+
+      layerSelect.addEventListener("change", (e) => {
+        currentLayer = parseInt(e.target.value);
+        ctx = layers[currentLayer].getContext("2d");
+        drawLayers();
+      });
+
+      const toggleButton = document.querySelector(".toggle-tools");
+      const toolsElement = document.querySelector(".tools");
+      const toggleRightButton = document.querySelector(
+        ".toggle-right-controls"
+      );
+      const rightControlsElement = document.querySelector(".right-controls");
+
+      toggleButton.addEventListener("click", () => {
+        toolsElement.classList.toggle("visible");
+        toggleButton.innerHTML = toolsElement.classList.contains("visible")
+          ? '<img src="assets/arrow_left.svg" alt="Close image tools tab" />'
+          : '<img src="assets/arrow_right.svg" alt="Open image tools tab" />';
+      });
+
+      toggleRightButton.addEventListener("click", () => {
+        rightControlsElement.classList.toggle("visible");
+        toggleRightButton.innerHTML = rightControlsElement.classList.contains(
+          "visible"
+        )
+          ? '<img src="assets/arrow_right.svg" alt="Close image save tab" />'
+          : '<img src="assets/arrow_left.svg" alt="Open image save tab" />';
+      });
+
+      updateLayerControls();
+      updateGallery();
     </script>
-
-    </body>
-
+  </body>
 </html>
