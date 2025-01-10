@@ -152,7 +152,7 @@
         border-radius: 5px;
       }
 
-      .right-controls {
+      .bottom-controls {
         display: none;
         flex-direction: column;
         gap: 10px;
@@ -160,21 +160,23 @@
         background-color: #fff;
         border: 1px solid #ccc;
         border-radius: 5px;
-        position: absolute;
-        top: 50px;
-        right: 10px;
+        position: fixed;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 10;
         width: 250px;
       }
 
-      .right-controls.visible {
+      .bottom-controls.visible {
         display: flex;
       }
 
-      .toggle-right-controls {
-        position: absolute;
-        top: 10px;
-        right: 10px;
+      .toggle-bottom-controls {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
         background-color: #333;
         color: white;
         border: none;
@@ -182,6 +184,10 @@
         cursor: pointer;
         border-radius: 5px;
         z-index: 11;
+      }
+
+      .toggle-bottom-controls img {
+        transform: rotate(90deg);
       }
 
       button,
@@ -227,8 +233,8 @@
       }
 
       .gallery {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 10px;
         margin: 10px 0;
         justify-content: center;
@@ -241,8 +247,6 @@
         flex-direction: column;
         align-items: center;
         gap: 5px;
-        flex: 0 0 calc(33.333% - 20px);
-        max-width: calc(33.333% - 20px);
         box-sizing: border-box;
       }
 
@@ -324,6 +328,53 @@
       .notification.show {
         opacity: 1;
       }
+
+      .toggle-layer-settings {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border: none;
+        padding: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+        z-index: 11;
+      }
+
+      .layer-settings {
+        display: none;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        max-width: 300px;
+        position: absolute;
+        top: 50px;
+        right: 10px;
+        z-index: 10;
+      }
+
+      .layer-settings.visible {
+        display: flex;
+      }
+
+      .layer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+      }
+
+      .layer-grid canvas {
+        border: 1px solid #ccc;
+        cursor: pointer;
+      }
+
+      .layer-grid canvas.active {
+        border: 2px solid #007bff;
+      }
     </style>
   </head>
 
@@ -333,16 +384,6 @@
         <img src="assets/arrow_right.svg" alt="Open image tools tab" />
       </button>
       <div class="tools">
-        <div class="tool-group layer-controls">
-          <label>Layers:</label>
-          <button id="add-layer">
-            <img src="assets/add.svg" alt="Add Layer" />
-          </button>
-          <button id="delete-layer" disabled>
-            <img src="assets/remove.svg" alt="Delete Layer" />
-          </button>
-          <select id="layer-select" class="layer-select"></select>
-        </div>
         <div class="tool-group">
           <label for="color">Color:</label>
           <input type="color" id="color" value="#000000" />
@@ -380,10 +421,10 @@
             height="window.innerHeight"
           ></canvas>
         </div>
-        <button class="toggle-right-controls">
+        <button class="toggle-bottom-controls">
           <img src="assets/arrow_left.svg" alt="Open image save tab" />
         </button>
-        <div class="right-controls">
+        <div class="bottom-controls">
           <div class="tool-group">
             <input type="text" id="save-name" placeholder="Enter name" />
             <button id="save"><img src="assets/save.svg" alt="Save" /></button>
@@ -391,6 +432,22 @@
           <div class="gallery" id="gallery"></div>
         </div>
       </div>
+    </div>
+
+    <button class="toggle-layer-settings">
+      <img src="assets/arrow_left.svg" alt="Open layer settings tab" />
+    </button>
+    <div class="layer-settings">
+      <div class="tool-group layer-controls">
+        <label>Layers:</label>
+        <button id="add-layer">
+          <img src="assets/add.svg" alt="Add Layer" />
+        </button>
+        <button id="delete-layer" disabled>
+          <img src="assets/remove.svg" alt="Delete Layer" />
+        </button>
+      </div>
+      <div class="layer-grid" id="layer-grid"></div>
     </div>
 
     <div class="notifications" id="notifications"></div>
@@ -410,7 +467,7 @@
       const toolButtons = document.querySelectorAll(".draw-modes button");
       const addLayerBtn = document.getElementById("add-layer");
       const deleteLayerBtn = document.getElementById("delete-layer");
-      const layerSelect = document.getElementById("layer-select");
+      const layerGrid = document.getElementById("layer-grid");
       const notifications = document.getElementById("notifications");
 
       const showNotification = (message) => {
@@ -438,14 +495,24 @@
       };
 
       const updateLayerControls = () => {
-        layerSelect.innerHTML = "";
-        layers.forEach((_, index) => {
-          const option = document.createElement("option");
-          option.value = index;
-          option.textContent = `Layer ${index + 1}`;
-          layerSelect.appendChild(option);
+        layerGrid.innerHTML = "";
+        layers.forEach((layer, index) => {
+          const layerCanvas = document.createElement("canvas");
+          layerCanvas.width = 100;
+          layerCanvas.height = 100;
+          layerCanvas.getContext("2d").drawImage(layer, 0, 0, 100, 100);
+          layerCanvas.classList.add("layer-preview");
+          if (index === currentLayer) {
+            layerCanvas.classList.add("active");
+          }
+          layerCanvas.addEventListener("click", () => {
+            currentLayer = index;
+            ctx = layers[currentLayer].getContext("2d");
+            drawLayers();
+            updateLayerControls();
+          });
+          layerGrid.appendChild(layerCanvas);
         });
-        layerSelect.value = currentLayer;
         deleteLayerBtn.disabled = layers.length <= 1;
       };
 
@@ -661,6 +728,7 @@
           console.log("Drawing...");
           tools[state.tool].move(e);
           drawLayers();
+          updateLayerControls();
         }
       };
 
@@ -670,6 +738,7 @@
         tools[state.tool].end(e);
         state.drawing = false;
         drawLayers();
+        updateLayerControls();
       };
 
       canvas.addEventListener("mousedown", startDrawing);
@@ -782,18 +851,12 @@
       addLayerBtn.addEventListener("click", addLayer);
       deleteLayerBtn.addEventListener("click", deleteLayer);
 
-      layerSelect.addEventListener("change", (e) => {
-        currentLayer = parseInt(e.target.value);
-        ctx = layers[currentLayer].getContext("2d");
-        drawLayers();
-      });
-
       const toggleButton = document.querySelector(".toggle-tools");
       const toolsElement = document.querySelector(".tools");
-      const toggleRightButton = document.querySelector(
-        ".toggle-right-controls"
+      const toggleBottomButton = document.querySelector(
+        ".toggle-bottom-controls"
       );
-      const rightControlsElement = document.querySelector(".right-controls");
+      const bottomControlsElement = document.querySelector(".bottom-controls");
 
       toggleButton.addEventListener("click", () => {
         toolsElement.classList.toggle("visible");
@@ -802,13 +865,26 @@
           : '<img src="assets/arrow_right.svg" alt="Open image tools tab" />';
       });
 
-      toggleRightButton.addEventListener("click", () => {
-        rightControlsElement.classList.toggle("visible");
-        toggleRightButton.innerHTML = rightControlsElement.classList.contains(
+      toggleBottomButton.addEventListener("click", () => {
+        bottomControlsElement.classList.toggle("visible");
+        toggleBottomButton.innerHTML = bottomControlsElement.classList.contains(
           "visible"
         )
           ? '<img src="assets/arrow_right.svg" alt="Close image save tab" />'
           : '<img src="assets/arrow_left.svg" alt="Open image save tab" />';
+      });
+
+      const toggleLayerSettingsButton = document.querySelector(
+        ".toggle-layer-settings"
+      );
+      const layerSettingsElement = document.querySelector(".layer-settings");
+
+      toggleLayerSettingsButton.addEventListener("click", () => {
+        layerSettingsElement.classList.toggle("visible");
+        toggleLayerSettingsButton.innerHTML =
+          layerSettingsElement.classList.contains("visible")
+            ? '<img src="assets/arrow_right.svg" alt="Close layer settings tab" />'
+            : '<img src="assets/arrow_left.svg" alt="Open layer settings tab" />';
       });
 
       updateLayerControls();
