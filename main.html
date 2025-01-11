@@ -461,7 +461,6 @@
       const sizeInput = document.getElementById("size-input");
       const clearButton = document.getElementById("clear");
       const saveButton = document.getElementById("save");
-      const loadButton = document.getElementById("load");
       const saveNameInput = document.getElementById("save-name");
       const gallery = document.getElementById("gallery");
       const toolButtons = document.querySelectorAll(".draw-modes button");
@@ -769,6 +768,46 @@
         drawLayers();
       });
 
+      const saveDrawing = () => {
+        const name = saveNameInput.value.trim();
+        if (!name) {
+          showNotification("Please enter a name for your drawing!");
+          return;
+        }
+
+        const layersData = layers.map((layer) => layer.toDataURL());
+        const drawings = JSON.parse(localStorage.getItem("drawings") || "[]");
+        drawings.push({ name, layers: layersData });
+        localStorage.setItem("drawings", JSON.stringify(drawings));
+        updateGallery();
+        showNotification("Drawing saved!");
+      };
+
+      const loadDrawing = (drawing) => {
+        const imgToLoad = new Image();
+        imgToLoad.src = drawing.layers[0];
+        imgToLoad.onload = () => {
+          layers = drawing.layers.map((layerData) => {
+            const layer = document.createElement("canvas");
+            layer.width = canvas.width;
+            layer.height = canvas.height;
+            const layerCtx = layer.getContext("2d");
+            const img = new Image();
+            img.src = layerData;
+            img.onload = () => {
+              layerCtx.drawImage(img, 0, 0);
+              drawLayers();
+              updateLayerControls();
+            };
+            return layer;
+          });
+          currentLayer = 0;
+          ctx = layers[currentLayer].getContext("2d");
+          drawLayers();
+          updateLayerControls();
+        };
+      };
+
       const updateGallery = () => {
         console.log("Updating gallery...");
         gallery.innerHTML = "";
@@ -778,16 +817,11 @@
           item.className = "gallery-item";
 
           const img = document.createElement("img");
-          img.src = drawing.data;
+          img.src = drawing.layers[0];
           img.alt = drawing.name;
           img.addEventListener("click", () => {
             console.log("Loading image from gallery");
-            const imgToLoad = new Image();
-            imgToLoad.src = drawing.data;
-            imgToLoad.onload = () => {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(imgToLoad, 0, 0);
-            };
+            loadDrawing(drawing);
           });
 
           const deleteButton = document.createElement("button");
@@ -814,20 +848,7 @@
         });
       };
 
-      saveButton.addEventListener("click", () => {
-        const name = saveNameInput.value.trim();
-        if (!name) {
-          showNotification("Please enter a name for your drawing!");
-          return;
-        }
-
-        const dataURL = canvas.toDataURL();
-        const drawings = JSON.parse(localStorage.getItem("drawings") || "[]");
-        drawings.push({ name, data: dataURL });
-        localStorage.setItem("drawings", JSON.stringify(drawings));
-        updateGallery();
-        showNotification("Drawing saved!");
-      });
+      saveButton.addEventListener("click", saveDrawing);
 
       toolButtons.forEach((button) => {
         button.addEventListener("click", () => {
