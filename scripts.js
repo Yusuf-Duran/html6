@@ -604,5 +604,38 @@ window.addEventListener("orientationchange", resizeCanvas);
 // Initial canvas size adjustment
 resizeCanvas();
 
+const handleCanvasDrop = (e) => {
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    handleFiles(files);
+  }
+};
+
+canvas.addEventListener("dragover", (e) => {
+  e.preventDefault();
+  canvas.classList.add("dragover");
+});
+
+canvas.addEventListener("dragleave", () => {
+  canvas.classList.remove("dragover");
+});
+
+canvas.addEventListener("drop", handleCanvasDrop);
+
+const handleFiles = (files) => {
+  const file = files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      drawLayers();
+    };
+  };
+  reader.readAsDataURL(file);
+};
+
 updateLayerControls();
 updateGallery();

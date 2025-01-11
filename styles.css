@@ -217,6 +217,11 @@ canvas {
   max-height: none;
 }
 
+canvas.dragover {
+  border-color: #007bff;
+  background-color: #f0f8ff;
+}
+
 #drawing-board {
   background-color: white;
 }
