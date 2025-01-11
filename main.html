@@ -376,20 +376,6 @@
         border: 2px solid #007bff;
       }
 
-      .color-palette {
-        display: flex;
-        gap: 5px;
-        margin-top: 5px;
-      }
-
-      .color-palette div {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-      }
-
       .color-history {
         display: flex;
         gap: 5px;
@@ -415,10 +401,6 @@
         <div class="tool-group">
           <label for="color">Color:</label>
           <input type="color" id="color" value="#000000" />
-          <div id="color-palette" class="color-palette"></div>
-        </div>
-        <div class="tool-group">
-          <label for="color-history">Color History:</label>
           <div id="color-history" class="color-history"></div>
         </div>
 
@@ -510,7 +492,6 @@
       const deleteLayerBtn = document.getElementById("delete-layer");
       const layerGrid = document.getElementById("layer-grid");
       const notifications = document.getElementById("notifications");
-      const colorPalette = document.getElementById("color-palette");
       const colorHistory = document.getElementById("color-history");
 
       const showNotification = (message) => {
@@ -1087,14 +1068,6 @@
             : '<img src="assets/arrow_left.svg" alt="Open layer settings tab" />';
       });
 
-      const paletteColors = [
-        "#FF0000",
-        "#00FF00",
-        "#0000FF",
-        "#FFFF00",
-        "#FF00FF",
-        "#00FFFF",
-      ];
       const maxHistory = 5;
 
       const updateColorHistory = (color) => {
@@ -1127,16 +1100,20 @@
         updateColorHistory(color);
       });
 
-      paletteColors.forEach((color) => {
-        const colorDiv = document.createElement("div");
-        colorDiv.style.backgroundColor = color;
-        colorDiv.addEventListener("click", () => {
-          colorPicker.value = color;
-          state.color = color;
-          updateColorHistory(color);
-        });
-        colorPalette.appendChild(colorDiv);
-      });
+      // Add initial color to history
+      updateColorHistory(colorPicker.value);
+
+      const resizeCanvas = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        drawLayers();
+      };
+
+      window.addEventListener("resize", resizeCanvas);
+      window.addEventListener("orientationchange", resizeCanvas);
+
+      // Initial canvas size adjustment
+      resizeCanvas();
 
       updateLayerControls();
       updateGallery();
