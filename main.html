@@ -375,6 +375,34 @@
       .layer-grid canvas.active {
         border: 2px solid #007bff;
       }
+
+      .color-palette {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+      }
+
+      .color-palette div {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
+
+      .color-history {
+        display: flex;
+        gap: 5px;
+        margin-top: 5px;
+      }
+
+      .color-history div {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+      }
     </style>
   </head>
 
@@ -387,6 +415,11 @@
         <div class="tool-group">
           <label for="color">Color:</label>
           <input type="color" id="color" value="#000000" />
+          <div id="color-palette" class="color-palette"></div>
+        </div>
+        <div class="tool-group">
+          <label for="color-history">Color History:</label>
+          <div id="color-history" class="color-history"></div>
         </div>
 
         <div class="tool-group">
@@ -410,6 +443,15 @@
           </button>
           <button data-tool="pencil" class="active">
             <img src="assets/pencil.svg" alt="Pencil" />
+          </button>
+          <button data-tool="line">
+            <img src="assets/line.svg" alt="Line" />
+          </button>
+          <button data-tool="triangle">
+            <img src="assets/triangle.svg" alt="Triangle" />
+          </button>
+          <button data-tool="star">
+            <img src="assets/star.svg" alt="Star" />
           </button>
         </div>
       </div>
@@ -468,6 +510,8 @@
       const deleteLayerBtn = document.getElementById("delete-layer");
       const layerGrid = document.getElementById("layer-grid");
       const notifications = document.getElementById("notifications");
+      const colorPalette = document.getElementById("color-palette");
+      const colorHistory = document.getElementById("color-history");
 
       const showNotification = (message) => {
         const notification = document.createElement("div");
@@ -673,8 +717,143 @@
             ctx.beginPath();
           },
         },
+        line: {
+          start: (e) => {
+            const { x, y } = getPosition(e);
+            state.startX = x;
+            state.startY = y;
+            previousDrawing = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          },
+          move: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            const { x, y } = getPosition(e);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.moveTo(state.startX, state.startY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+          },
+          end: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            previousDrawing = null;
+            const { x, y } = getPosition(e);
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.moveTo(state.startX, state.startY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+          },
+        },
+        triangle: {
+          start: (e) => {
+            const { x, y } = getPosition(e);
+            state.startX = x;
+            state.startY = y;
+            previousDrawing = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          },
+          move: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            const { x, y } = getPosition(e);
+            const width = x - state.startX;
+            const height = y - state.startY;
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.moveTo(state.startX, state.startY);
+            ctx.lineTo(state.startX + width / 2, state.startY + height);
+            ctx.lineTo(state.startX - width / 2, state.startY + height);
+            ctx.closePath();
+            ctx.stroke();
+          },
+          end: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            previousDrawing = null;
+            const { x, y } = getPosition(e);
+            const width = x - state.startX;
+            const height = y - state.startY;
+            ctx.lineWidth = state.size;
+            ctx.strokeStyle = state.color;
+            ctx.beginPath();
+            ctx.moveTo(state.startX, state.startY);
+            ctx.lineTo(state.startX + width / 2, state.startY + height);
+            ctx.lineTo(state.startX - width / 2, state.startY + height);
+            ctx.closePath();
+            ctx.stroke();
+          },
+        },
+        star: {
+          start: (e) => {
+            const { x, y } = getPosition(e);
+            state.startX = x;
+            state.startY = y;
+            previousDrawing = ctx.getImageData(
+              0,
+              0,
+              canvas.width,
+              canvas.height
+            );
+          },
+          move: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            const { x, y } = getPosition(e);
+            const radius = Math.sqrt(
+              Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2)
+            );
+            drawStar(ctx, state.startX, state.startY, 5, radius, radius / 2);
+          },
+          end: (e) => {
+            if (previousDrawing) {
+              ctx.putImageData(previousDrawing, 0, 0);
+            }
+            previousDrawing = null;
+            const { x, y } = getPosition(e);
+            const radius = Math.sqrt(
+              Math.pow(x - state.startX, 2) + Math.pow(y - state.startY, 2)
+            );
+            drawStar(ctx, state.startX, state.startY, 5, radius, radius / 2);
+          },
+        },
       };
 
+      const drawStar = (ctx, x, y, points, outerRadius, innerRadius) => {
+        ctx.lineWidth = state.size;
+        ctx.strokeStyle = state.color;
+        ctx.beginPath();
+        for (let i = 0; i < points; i++) {
+          ctx.lineTo(
+            x + outerRadius * Math.cos((i * 2 * Math.PI) / points),
+            y + outerRadius * Math.sin((i * 2 * Math.PI) / points)
+          );
+          ctx.lineTo(
+            x + innerRadius * Math.cos(((i + 0.5) * 2 * Math.PI) / points),
+            y + innerRadius * Math.sin(((i + 0.5) * 2 * Math.PI) / points)
+          );
+        }
+        ctx.closePath();
+        ctx.stroke();
+      };
       const state = {
         tool: "pencil",
         color: colorPicker.value,
@@ -906,6 +1085,57 @@
           layerSettingsElement.classList.contains("visible")
             ? '<img src="assets/arrow_right.svg" alt="Close layer settings tab" />'
             : '<img src="assets/arrow_left.svg" alt="Open layer settings tab" />';
+      });
+
+      const paletteColors = [
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FFFF00",
+        "#FF00FF",
+        "#00FFFF",
+      ];
+      const maxHistory = 5;
+
+      const updateColorHistory = (color) => {
+        const historyColors = Array.from(colorHistory.children).map(
+          (div) => div.style.backgroundColor
+        );
+        if (!historyColors.includes(color)) {
+          if (historyColors.length >= maxHistory) {
+            colorHistory.removeChild(colorHistory.lastChild);
+          }
+          const colorDiv = document.createElement("div");
+          colorDiv.style.backgroundColor = color;
+          colorDiv.addEventListener("click", () => {
+            colorPicker.value = color;
+            state.color = color;
+          });
+          colorHistory.insertBefore(colorDiv, colorHistory.firstChild);
+        } else {
+          const existingColorDiv = Array.from(colorHistory.children).find(
+            (div) => div.style.backgroundColor === color
+          );
+          colorHistory.removeChild(existingColorDiv);
+          colorHistory.insertBefore(existingColorDiv, colorHistory.firstChild);
+        }
+      };
+
+      colorPicker.addEventListener("input", (e) => {
+        const color = e.target.value;
+        state.color = color;
+        updateColorHistory(color);
+      });
+
+      paletteColors.forEach((color) => {
+        const colorDiv = document.createElement("div");
+        colorDiv.style.backgroundColor = color;
+        colorDiv.addEventListener("click", () => {
+          colorPicker.value = color;
+          state.color = color;
+          updateColorHistory(color);
+        });
+        colorPalette.appendChild(colorDiv);
       });
 
       updateLayerControls();
