@@ -1,4 +1,11 @@
+/**
+ * Class representing a drawing board.
+ */
 class DrawingBoard {
+  /**
+   * Create a drawing board.
+   * @param {string} canvasId - The ID of the canvas element.
+   */
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.canvas.width = window.innerWidth;
@@ -19,6 +26,9 @@ class DrawingBoard {
     this.init();
   }
 
+  /**
+   * Initialize the drawing board.
+   */
   init() {
     this.addLayer();
     this.attachEventListeners();
@@ -28,6 +38,9 @@ class DrawingBoard {
     this.updateColorHistory(this.state.color);
   }
 
+  /**
+   * Add a new layer to the drawing board.
+   */
   addLayer() {
     const newLayer = document.createElement("canvas");
     newLayer.width = this.canvas.width;
@@ -36,17 +49,20 @@ class DrawingBoard {
     this.layers.push(newLayer);
     this.currentLayer = this.layers.length - 1;
     this.ctx = this.layers[this.currentLayer].getContext("2d");
-    this.tools.ctx = this.ctx; // Update tools context
+    this.tools.ctx = this.ctx;
     this.drawLayers();
     this.updateLayerControls();
   }
 
+  /**
+   * Delete the current layer from the drawing board.
+   */
   deleteLayer() {
     if (this.layers.length > 1) {
-      this.layers.pop();
-      this.currentLayer = this.layers.length - 1;
+      this.layers.splice(this.currentLayer, 1);
+      this.currentLayer = Math.max(this.currentLayer - 1, 0);
       this.ctx = this.layers[this.currentLayer].getContext("2d");
-      this.tools.ctx = this.ctx; // Update tools context
+      this.tools.ctx = this.ctx;
       this.drawLayers();
       this.updateLayerControls();
     } else {
@@ -54,6 +70,9 @@ class DrawingBoard {
     }
   }
 
+  /**
+   * Draw all layers on the main canvas.
+   */
   drawLayers() {
     const mainCtx = this.canvas.getContext("2d");
     mainCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -62,6 +81,9 @@ class DrawingBoard {
     });
   }
 
+  /**
+   * Update the layer controls UI.
+   */
   updateLayerControls() {
     const layerGrid = document.getElementById("layer-grid");
     layerGrid.innerHTML = "";
@@ -77,7 +99,7 @@ class DrawingBoard {
       layerCanvas.addEventListener("click", () => {
         this.currentLayer = index;
         this.ctx = this.layers[this.currentLayer].getContext("2d");
-        this.tools.ctx = this.ctx; // Update tools context
+        this.tools.ctx = this.ctx;
         this.drawLayers();
         this.updateLayerControls();
       });
@@ -86,6 +108,10 @@ class DrawingBoard {
     document.getElementById("delete-layer").disabled = this.layers.length <= 1;
   }
 
+  /**
+   * Show a notification message.
+   * @param {string} message - The message to display.
+   */
   showNotification(message) {
     const notifications = document.getElementById("notifications");
     const notification = document.createElement("div");
@@ -103,6 +129,9 @@ class DrawingBoard {
     }, 2000);
   }
 
+  /**
+   * Attach event listeners to the canvas and other UI elements.
+   */
   attachEventListeners() {
     const canvas = this.canvas;
     canvas.addEventListener("mousedown", (e) => this.startDrawing(e));
@@ -179,11 +208,19 @@ class DrawingBoard {
     });
   }
 
+  /**
+   * Start drawing on the canvas.
+   * @param {Event} e - The event object.
+   */
   startDrawing(e) {
     this.state.drawing = true;
     this.tools[this.state.tool].start(e);
   }
 
+  /**
+   * Draw on the canvas.
+   * @param {Event} e - The event object.
+   */
   draw(e) {
     if (this.state.drawing) {
       this.tools[this.state.tool].move(e);
@@ -192,6 +229,10 @@ class DrawingBoard {
     }
   }
 
+  /**
+   * Stop drawing on the canvas.
+   * @param {Event} e - The event object.
+   */
   stopDrawing(e) {
     if (!this.state.drawing) return;
     this.tools[this.state.tool].end(e);
@@ -200,6 +241,9 @@ class DrawingBoard {
     this.updateLayerControls();
   }
 
+  /**
+   * Clear the canvas.
+   */
   clearCanvas() {
     this.layers.forEach((layer) => {
       layer
@@ -209,6 +253,9 @@ class DrawingBoard {
     this.drawLayers();
   }
 
+  /**
+   * Save the current drawing.
+   */
   saveDrawing() {
     const name = document.getElementById("save-name").value.trim();
     if (!name) {
@@ -224,6 +271,10 @@ class DrawingBoard {
     this.showNotification("Drawing saved!");
   }
 
+  /**
+   * Load a saved drawing.
+   * @param {Object} drawing - The drawing object to load.
+   */
   loadDrawing(drawing) {
     const imgToLoad = new Image();
     imgToLoad.src = drawing.layers[0];
@@ -244,12 +295,15 @@ class DrawingBoard {
       });
       this.currentLayer = 0;
       this.ctx = this.layers[this.currentLayer].getContext("2d");
-      this.tools.ctx = this.ctx; // Update tools context
+      this.tools.ctx = this.ctx;
       this.drawLayers();
       this.updateLayerControls();
     };
   }
 
+  /**
+   * Update the gallery with saved drawings.
+   */
   updateGallery() {
     const gallery = document.getElementById("gallery");
     gallery.innerHTML = "";
@@ -282,11 +336,19 @@ class DrawingBoard {
     });
   }
 
+  /**
+   * Change the drawing color.
+   * @param {Event} e - The event object.
+   */
   changeColor(e) {
     this.state.color = e.target.value;
     this.updateColorHistory(e.target.value);
   }
 
+  /**
+   * Change the drawing size.
+   * @param {Event} e - The event object.
+   */
   changeSize(e) {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value > 0) {
@@ -294,21 +356,35 @@ class DrawingBoard {
     }
   }
 
+  /**
+   * Resize the canvas to fit the window.
+   */
   resizeCanvas() {
     this.canvas.width = window.innerWidth;
     this.canvas.height = window.innerHeight;
     this.drawLayers();
   }
 
+  /**
+   * Handle drag over event on the canvas.
+   * @param {Event} e - The event object.
+   */
   handleDragOver(e) {
     e.preventDefault();
     this.canvas.classList.add("dragover");
   }
 
+  /**
+   * Handle drag leave event on the canvas.
+   */
   handleDragLeave() {
     this.canvas.classList.remove("dragover");
   }
 
+  /**
+   * Handle drop event on the canvas.
+   * @param {Event} e - The event object.
+   */
   handleDrop(e) {
     e.preventDefault();
     const files = e.dataTransfer.files;
@@ -317,6 +393,10 @@ class DrawingBoard {
     }
   }
 
+  /**
+   * Handle file input for the canvas.
+   * @param {FileList} files - The files to handle.
+   */
   handleFiles(files) {
     const file = files[0];
     const reader = new FileReader();
@@ -331,6 +411,10 @@ class DrawingBoard {
     reader.readAsDataURL(file);
   }
 
+  /**
+   * Update the color history UI.
+   * @param {string} color - The color to add to the history.
+   */
   updateColorHistory(color) {
     const colorHistory = document.getElementById("color-history");
     const historyColors = Array.from(colorHistory.children).map(
@@ -356,6 +440,10 @@ class DrawingBoard {
     }
   }
 
+  /**
+   * Set the current drawing tool.
+   * @param {string} tool - The tool to set.
+   */
   setTool(tool) {
     this.state.tool = tool;
     const toolButtons = document.querySelectorAll(".draw-modes button");
@@ -365,6 +453,15 @@ class DrawingBoard {
       .classList.add("active");
   }
 
+  /**
+   * Draw a star on the canvas.
+   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+   * @param {number} x - The x-coordinate of the center of the star.
+   * @param {number} y - The y-coordinate of the center of the star.
+   * @param {number} points - The number of points on the star.
+   * @param {number} outerRadius - The outer radius of the star.
+   * @param {number} innerRadius - The inner radius of the star.
+   */
   drawStar(ctx, x, y, points, outerRadius, innerRadius) {
     ctx.lineWidth = this.state.size;
     ctx.strokeStyle = this.state.color;
@@ -384,7 +481,16 @@ class DrawingBoard {
   }
 }
 
+/**
+ * Class representing drawing tools.
+ */
 class Tools {
+  /**
+   * Create drawing tools.
+   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+   * @param {HTMLCanvasElement} canvas - The canvas element.
+   * @param {Object} state - The state object.
+   */
   constructor(ctx, canvas, state) {
     this.ctx = ctx;
     this.canvas = canvas;
@@ -392,6 +498,11 @@ class Tools {
     this.previousDrawing = null;
   }
 
+  /**
+   * Get the position of the event relative to the canvas.
+   * @param {Event} e - The event object.
+   * @returns {Object} The x and y coordinates.
+   */
   #getPosition(e) {
     if (!this.canvas) {
       console.error("Canvas is undefined");
@@ -416,6 +527,15 @@ class Tools {
     return { x: x - rect.left, y: y - rect.top };
   }
 
+  /**
+   * Draw a star on the canvas.
+   * @param {CanvasRenderingContext2D} ctx - The canvas rendering context.
+   * @param {number} x - The x-coordinate of the center of the star.
+   * @param {number} y - The y-coordinate of the center of the star.
+   * @param {number} points - The number of points on the star.
+   * @param {number} outerRadius - The outer radius of the star.
+   * @param {number} innerRadius - The inner radius of the star.
+   */
   #drawStar(ctx, x, y, points, outerRadius, innerRadius) {
     ctx.beginPath();
     for (let i = 0; i < points; i++) {
