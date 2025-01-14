@@ -342,6 +342,7 @@ class DrawingBoard {
    */
   changeColor(e) {
     this.state.color = e.target.value;
+    this.ctx.strokeStyle = this.state.color;
     this.updateColorHistory(e.target.value);
   }
 
