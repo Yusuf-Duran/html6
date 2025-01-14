@@ -4,6 +4,10 @@
   padding: 0;
 }
 
+html, body {
+  overflow: hidden;
+}
+
 body {
   font-family: Arial, sans-serif;
   display: flex;
@@ -386,4 +390,17 @@ canvas.dragover {
   cursor: pointer;
   border: 1px solid #ccc;
   border-radius: 3px;
+}
+
+.layer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.layer-label {
+  margin-bottom: 5px;
+  font-size: 0.8rem;
+  color: #333;
 }

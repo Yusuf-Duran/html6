@@ -52,6 +52,7 @@ class DrawingBoard {
     this.tools.ctx = this.ctx;
     this.drawLayers();
     this.updateLayerControls();
+    this.updateColorPicker();
   }
 
   /**
@@ -102,8 +103,19 @@ class DrawingBoard {
         this.tools.ctx = this.ctx;
         this.drawLayers();
         this.updateLayerControls();
+        this.updateColorPicker();
       });
-      layerGrid.appendChild(layerCanvas);
+
+      const layerLabel = document.createElement("div");
+      layerLabel.className = "layer-label";
+      layerLabel.textContent = `Layer ${index + 1}`;
+
+      const layerContainer = document.createElement("div");
+      layerContainer.className = "layer-container";
+      layerContainer.appendChild(layerLabel);
+      layerContainer.appendChild(layerCanvas);
+
+      layerGrid.appendChild(layerContainer);
     });
     document.getElementById("delete-layer").disabled = this.layers.length <= 1;
   }
@@ -452,6 +464,13 @@ class DrawingBoard {
     document
       .querySelector(`button[data-tool="${tool}"]`)
       .classList.add("active");
+  }
+
+  /**
+   * Update the color picker to reflect the current color.
+   */
+  updateColorPicker() {
+    document.getElementById("color").value = this.state.color;
   }
 
   /**
